@@ -58,6 +58,38 @@ def plot_map(malaysia_map, data):
         line_opacity=0.2,
         legend_name="Population Distribution",
     ).add_to(m)
+    merged = malaysia_map.merge(data, left_on="name", right_on="State", how="left")
+ 
+    folium.GeoJson(
+        merged,
+        name="Tooltips",
+        style_function=lambda feature: {
+            "fillColor": "#ffffff",
+            "color": "#000000",
+            "fillOpacity": 0.0,
+            "weight": 0.1,
+        },
+        highlight_function=lambda feature: {
+            "fillColor": "#000000",
+            "color": "#000000",
+            "fillOpacity": 0.15,
+            "weight": 0.5,
+        },
+        tooltip=folium.GeoJsonTooltip(
+            fields=["name", value_column],
+            aliases=["State:", f"{value_column}:"],
+            localize=True,
+            sticky=True,
+            labels=True,
+            style="""
+                background-color: white;
+                color: #333333;
+                font-family: arial;
+                font-size: 13px;
+                padding: 6px;
+            """,
+        ),
+    ).add_to(m)
     return m
 
 
@@ -78,49 +110,3 @@ if __name__ == "__main__":
     main()
 
 
-def plot_map(malaysia_map, data, value_column, fill_color="YlOrRd"):
-    m = folium.Map(location=[4.2105, 101.9758], zoom_start=6)
-
-    # 1. Draw the choropleth (colour fill) as before
-    folium.Choropleth(
-        geo_data=malaysia_map,
-        name=f"{value_column} Distribution",
-        data=data,
-        columns=["State", value_column],
-        key_on="feature.properties.name",
-        fill_color=fill_color,
-        fill_opacity=0.7,
-        line_opacity=0.2,
-        legend_name=f"{value_column} Distribution",
-    ).add_to(m)
-
-    # 2. Merge the data into the map's GeoDataFrame so each shape
-    #    carries the value needed for the tooltip
-    merged = malaysia_map.merge(data, left_on="name", right_on="State", how="left")
-
-    # 3. Add an invisible GeoJson layer just for hover tooltips
-    folium.GeoJson(
-        merged,
-        name="Tooltips",
-        style_function=lambda feature: {
-            "fillColor": "transparent",
-            "color": "transparent",
-            "weight": 0,
-        },
-        tooltip=folium.GeoJsonTooltip(
-            fields=["name", value_column],
-            aliases=["State:", f"{value_column}:"],
-            localize=True,
-            sticky=True,
-            labels=True,
-            style="""
-                background-color: white;
-                color: #333333;
-                font-family: arial;
-                font-size: 13px;
-                padding: 6px;
-            """,
-        ),
-    ).add_to(m)
-
-    return m
