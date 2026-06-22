@@ -79,6 +79,7 @@ def plot_map(malaysia_map, data):
             fields=["name", "Population"],
             aliases=["State:", "Population:"],
             localize=True
+        )
         ).add_to(m)
         folium.LayerControl().add_to(m)
     return m
