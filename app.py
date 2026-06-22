@@ -3,20 +3,17 @@ TFB3133 / TEB3133 Data Visualization — Lab 4
 Visualizing Population Distribution using Streamlit
 Map file: malaysia_states.geojson (16 states/territories)
 """
-
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 import folium
 import streamlit as st
 from streamlit_folium import folium_static
-
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Malaysia Population Distribution Map",
     layout="wide",
 )
-
 # NOTE: The GeoJSON file labels Penang as "Pulau Pinang" (its official Malay name),
 # not "Penang". The state list below matches the GeoJSON exactly so every state
 # gets coloured on the choropleth map.
@@ -25,25 +22,23 @@ STATES = [
     "Pulau Pinang", "Perak", "Perlis", "Sabah", "Sarawak", "Selangor",
     "Terengganu", "Kuala Lumpur", "Labuan", "Putrajaya",
 ]
-
 IMAGINARY_STATES = ["New Selangor", "Westmalaya"]
-
-
 # ── 3.1 Generate sample population data ──────────────────────────────────────
-def generate_population_data():
-    population = np.random.randint(500_000, 5_000_000, size=len(STATES))
-    data = pd.DataFrame({"State": STATES, "Population": population})
+def generate_population_data(states):
+    population = np.random.randint(1_000_000, 10_000_000, size=len(states))
+    data = pd.DataFrame({"State": states, "Population": population})
     return data
-    
-
-
+ 
+def generate_gdp_data(states, low=10_000, high=100_000):
+    """GDP in RM millions, as suggested in the lab slides."""
+    gdp = np.random.randint(low, high, size=len(states))
+    return pd.DataFrame({"State": states, "GDP": gdp})
 # ── 3.2 Load the Malaysia map ─────────────────────────────────────────────────
 @st.cache_data
 def load_map():
     malaysia_map = gpd.read_file("malaysia_states.geojson")
     return malaysia_map
-
-
+ 
 # ── 3.3 Plot the choropleth map ───────────────────────────────────────────────
 def plot_map(malaysia_map, data):
     m = folium.Map(location=[4.2105, 101.9758], zoom_start=6)
@@ -53,7 +48,7 @@ def plot_map(malaysia_map, data):
         data=data,
         columns=["State", "Population"],
         key_on="feature.properties.name",
-        fill_color="YlOrRd",
+        fill_color="Greens",
         fill_opacity=0.7,
         line_opacity=0.2,
         legend_name="Population Distribution",
@@ -65,8 +60,7 @@ def plot_map(malaysia_map, data):
         right_on="State",   # Data column
         how="left"
     )
-
-    
+ 
     # Add GeoJson layer with tooltip
     folium.GeoJson(
         malaysia_map,
@@ -83,24 +77,35 @@ def plot_map(malaysia_map, data):
             localize=True
         )
     ).add_to(m)
-
     folium.LayerControl().add_to(m)
     return m
-
-
 # ── 3.4 Main Streamlit application ────────────────────────────────────────────
 def main():
     st.title("Malaysia Population Distribution Map")
-
-    population_data = generate_population_data()
-    st.write("Sample Population Data for States:")
+ 
+    # ── Sidebar dropdown filter ───────────────────────────────────────────
+    st.sidebar.header("🔍 Filter States")
+    selected_states = st.sidebar.multiselect(
+        "Choose states to display",
+        options=STATES,
+        default=STATES,  # all states selected by default
+    )
+ 
+    if not selected_states:
+        st.warning("⚠️ Please select at least one state from the sidebar.")
+        return
+ 
+    population_data = generate_population_data(selected_states)
+    st.write("Sample Population Data for Selected States:")
     st.dataframe(population_data, use_container_width=True)
-
+ 
     malaysia_map = load_map()
-    folium_map = plot_map(malaysia_map, population_data)
+    # Filter the map shapes to only the selected states
+    filtered_map = malaysia_map[malaysia_map["name"].isin(selected_states)]
+ 
+    folium_map = plot_map(filtered_map, population_data)
     folium_static(folium_map)
-
-
+ 
 if __name__ == "__main__":
     main()
 
