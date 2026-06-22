@@ -64,7 +64,9 @@ def plot_map(malaysia_map, data):
         left_on="name",     # GeoJSON property
         right_on="State",   # Data column
         how="left"
-    ) 
+    )
+
+    
     # Add GeoJson layer with tooltip
     folium.GeoJson(
         malaysia_map,
@@ -80,8 +82,9 @@ def plot_map(malaysia_map, data):
             aliases=["State:", "Population:"],
             localize=True
         )
-        ).add_to(m)
-        folium.LayerControl().add_to(m)
+    ).add_to(m)
+
+    folium.LayerControl().add_to(m)
     return m
 
 
