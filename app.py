@@ -58,38 +58,28 @@ def plot_map(malaysia_map, data):
         line_opacity=0.2,
         legend_name="Population Distribution",
     ).add_to(m)
-    merged = malaysia_map.merge(data, left_on="name", right_on="State", how="left")
- 
+    # Merge GeoDataFrame with population data
+    malaysia_map = malaysia_map.merge(
+        data,
+        left_on="name",     # GeoJSON property
+        right_on="State",   # Data column
+        how="left"
+    ) 
+    # Add GeoJson layer with tooltip
     folium.GeoJson(
-        merged,
-        name="Tooltips",
-        style_function=lambda feature: {
+        malaysia_map,
+        name="States",
+        style_function=lambda x: {
             "fillColor": "#ffffff",
             "color": "#000000",
-            "fillOpacity": 0.0,
+            "fillOpacity": 0,
             "weight": 0.1,
         },
-        highlight_function=lambda feature: {
-            "fillColor": "#000000",
-            "color": "#000000",
-            "fillOpacity": 0.15,
-            "weight": 0.5,
-        },
         tooltip=folium.GeoJsonTooltip(
-            fields=["name", value_column],
-            aliases=["State:", f"{value_column}:"],
-            localize=True,
-            sticky=True,
-            labels=True,
-            style="""
-                background-color: white;
-                color: #333333;
-                font-family: arial;
-                font-size: 13px;
-                padding: 6px;
-            """,
-        ),
-    ).add_to(m)
+            fields=["name", "Population"],
+            aliases=["State:", "Population:"],
+            localize=True
+        )
     return m
 
 
